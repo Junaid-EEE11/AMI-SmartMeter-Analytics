@@ -1,1 +1,1 @@
-"# AMI-SmartMeter-Analytics" 
+# AMI-SmartMeter-Analytics
