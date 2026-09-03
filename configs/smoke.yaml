@@ -1,0 +1,101 @@
+# Fast Smoke Test Configuration for shift-ami
+random_seed: 42
+
+paths:
+  raw_dir: "data/raw"
+  raw_file: "data/processed/synthetic_ami.parquet"
+  household_info_file: ""
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+  results_dir: "results/smoke"
+  reports_dir: "reports"
+
+schema_mapping:
+  raw_columns:
+    household_id: ["household_id", "LCLid"]
+    timestamp: ["timestamp", "DateTime"]
+    energy_kwh: ["energy_kwh", "kwh"]
+    tariff_group: ["tariff_group", "stdorToU"]
+    acorn_group: ["acorn_group", "Acorn"]
+  canonical_columns:
+    - household_id
+    - timestamp
+    - energy_kwh
+    - tariff_group
+    - acorn_group
+
+inclusion_criteria:
+  min_history_days: 14
+  max_missing_ratio: 0.20
+  valid_energy_range: [0.0, 50.0]
+  dtou_identifier: "ToU"
+  standard_identifier: "Std"
+
+aggregation:
+  cohorts:
+    - "dtou"
+    - "std"
+  sample_subset_households: 10
+
+splits:
+  train_start: "2013-01-01"
+  train_end: "2013-03-31"
+  cal_start: "2013-04-01"
+  cal_end: "2013-04-30"
+  val_start: "2013-05-01"
+  val_end: "2013-05-15"
+  test_start: "2013-05-16"
+  test_end: "2013-06-30"
+
+forecast_horizon: 48
+
+features:
+  lags: [48, 96, 336]
+  rolling_windows: [48]
+  calendar:
+    include_half_hour: true
+    include_day_of_week: true
+    include_month: true
+    include_is_weekend: true
+    include_cyclical: true
+    include_holidays: false
+
+models:
+  baselines:
+    - "seasonal_naive_day"
+    - "ridge"
+    - "hist_gradient_boosting"
+  probabilistic:
+    - "uncalibrated_quantile"
+    - "static_split_conformal"
+    - "cqr"
+    - "rolling_conformal"
+    - "aci"
+    - "sa_acp"
+
+quantiles:
+  nominal_alpha: 0.10
+  levels: [0.05, 0.50, 0.95]
+
+conformal:
+  alpha: 0.10
+  rolling_window_days: 7
+  aci:
+    gamma: 0.01
+    alpha_min: 0.01
+    alpha_max: 0.50
+  sa_acp:
+    detector: "wasserstein_1d"
+    window_length: 96
+    reference_length: 336
+    threshold: 1.0
+    gamma_slow: 0.005
+    gamma_fast: 0.030
+    shift_penalty_eta: 0.01
+    alpha_min: 0.01
+    alpha_max: 0.50
+
+bootstrap:
+  n_resamples: 100
+  block_size: 48
+  seed: 42

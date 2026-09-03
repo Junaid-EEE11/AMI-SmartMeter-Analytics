@@ -1,0 +1,37 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Environments
+.venv/
+env/
+venv/
+ENV/
+build/
+dist/
+*.egg-info/
+
+# Data files (raw AMI data must NEVER be committed to Git per research specifications)
+data/raw/*
+!data/raw/.gitkeep
+data/interim/*
+!data/interim/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+
+# Experiment logs and temp files
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+*.tmp
+.ipynb_checkpoints/
+scratch/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo

@@ -1,0 +1,103 @@
+# Main Experiment Configuration for shift-ami
+random_seed: 42
+
+paths:
+  raw_dir: "data/raw"
+  raw_file: "data/raw/CC_LCL-FullData.csv"
+  household_info_file: "data/raw/informations_households.csv"
+  interim_dir: "data/interim"
+  processed_dir: "data/processed"
+  results_dir: "results"
+  reports_dir: "reports"
+
+schema_mapping:
+  raw_columns:
+    household_id: ["LCLid", "ClientID", "household_id"]
+    timestamp: ["DateTime", "reading_datetime", "timestamp", "tstamp"]
+    energy_kwh: ["KWH/hh (per half hour)", "energy(kWh/hh)", "energy_kwh", "kwh"]
+    tariff_group: ["stdorToU", "tariff_group", "tariff"]
+    acorn_group: ["Acorn", "Acorn_grouped", "acorn_group"]
+  canonical_columns:
+    - household_id
+    - timestamp
+    - energy_kwh
+    - tariff_group
+    - acorn_group
+
+inclusion_criteria:
+  min_history_days: 90
+  max_missing_ratio: 0.10
+  valid_energy_range: [0.0, 50.0]
+  dtou_identifier: "ToU"
+  standard_identifier: "Std"
+
+aggregation:
+  cohorts:
+    - "dtou"
+    - "std"
+    - "total"
+  sample_subset_households: 50
+
+splits:
+  train_start: "2012-01-01"
+  train_end: "2012-10-31"
+  cal_start: "2012-11-01"
+  cal_end: "2012-12-31"
+  val_start: "2013-01-01"
+  val_end: "2013-02-28"
+  test_start: "2013-03-01"
+  test_end: "2013-12-31"
+
+forecast_horizon: 48  # 48 half-hours (24 hours ahead)
+
+features:
+  lags: [48, 96, 144, 336]  # 1 day, 2 days, 3 days, 1 week
+  rolling_windows: [48, 336]
+  calendar:
+    include_half_hour: true
+    include_day_of_week: true
+    include_month: true
+    include_is_weekend: true
+    include_cyclical: true
+    include_holidays: true
+
+models:
+  baselines:
+    - "seasonal_naive_day"
+    - "seasonal_naive_week"
+    - "ridge"
+    - "hist_gradient_boosting"
+  probabilistic:
+    - "uncalibrated_quantile"
+    - "static_split_conformal"
+    - "cqr"
+    - "rolling_conformal"
+    - "aci"
+    - "sa_acp"
+
+quantiles:
+  nominal_alpha: 0.10  # 90% target coverage
+  levels: [0.05, 0.50, 0.95]
+
+conformal:
+  alpha: 0.10
+  rolling_window_days: 28  # 28 days * 48 = 1344 half-hours
+  aci:
+    gamma: 0.01
+    alpha_min: 0.01
+    alpha_max: 0.50
+  sa_acp:
+    detector: "wasserstein_1d"
+    window_length: 336  # trailing 7 days
+    reference_length: 1344  # 28 days
+    threshold: 1.25
+    gamma_slow: 0.005
+    gamma_fast: 0.035
+    shift_penalty_eta: 0.02
+    alpha_min: 0.01
+    alpha_max: 0.50
+
+bootstrap:
+  n_resamples: 2000
+  block_size: 48  # Day-level blocks
+  seed: 42

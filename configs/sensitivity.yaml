@@ -1,0 +1,37 @@
+# Sensitivity Analysis Configuration
+random_seed: 42
+
+base_config: "configs/main.yaml"
+
+coverage_levels:
+  - 0.80  # alpha = 0.20
+  - 0.90  # alpha = 0.10 (primary)
+  - 0.95  # alpha = 0.05
+
+rolling_windows_days:
+  - 14
+  - 28
+  - 56
+
+aci_gammas:
+  - 0.005
+  - 0.010
+  - 0.020
+  - 0.050
+
+sa_acp_variations:
+  - name: "slow_only"
+    gamma_slow: 0.005
+    gamma_fast: 0.005
+  - name: "fast_moderate"
+    gamma_slow: 0.005
+    gamma_fast: 0.025
+  - name: "fast_aggressive"
+    gamma_slow: 0.005
+    gamma_fast: 0.050
+
+lag_configurations:
+  - name: "day_only"
+    lags: [48, 96]
+  - name: "week_and_day"
+    lags: [48, 96, 336]
